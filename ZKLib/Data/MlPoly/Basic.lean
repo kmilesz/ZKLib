@@ -31,9 +31,29 @@ def dotProduct (a b : Vector R n) : R :=
 
 scoped notation:80 a " *ᵥ " b => dotProduct a b
 
-#check List.Vector.casesOn
-
 /-! ### TODO: define induction principles for `Vector` similar to `List.Vector` -/
+/-- Induction principle that applies for vector in lean4, similar to List.Vector.casesOn -/
+def VectorInduction {α : Type} {P : ∀ {n}, Vector α n → Sort*}
+  (nil : P ⟨Array.mk [], rfl⟩)
+  (cons : ∀ (hd: α) (tl : Array α),
+    P ⟨tl, rfl⟩ ->
+    P ⟨Array.mk (List.cons hd tl.toList), rfl⟩)
+  {n : ℕ}
+  : ∀ v: Vector α n, P v
+    | ⟨⟨[]⟩, h ⟩ => match n, h with | _, rfl => nil
+    | ⟨⟨List.cons hd tl⟩ , h ⟩ =>
+      let itl := (VectorInduction nil cons ⟨Array.mk tl, rfl⟩)
+      match n, h with
+      | _, rfl => (cons hd (Array.mk tl) itl)
+
+/-- Induction principle that applies for vector in lean4, similar to List.Vector.elim -/
+def VectorElim {α : Type} {P : ∀ {n},  Vector α n → Sort*}
+  (H : ∀ l : List α, P ⟨Array.mk l, rfl ⟩) {n : ℕ}
+  : ∀ v: Vector α n, P v
+    | ⟨Array.mk l, h⟩ =>
+      match n, h with
+      | _, rfl => H l
+
 
 theorem dotProduct_eq_matrix_dotProduct (a b : Vector R n) :
     dotProduct a b = _root_.dotProduct a.get b.get := by
